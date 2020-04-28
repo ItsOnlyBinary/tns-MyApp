@@ -1,41 +1,103 @@
-/*
-In NativeScript, a file with the same name as an XML file is known as
-a code-behind file. The code-behind is a great place to place your view
-logic, and to set up your page’s data binding.
-*/
+const PlanetSelectViewModel = require("./main-view-model");
+const Observable = require("tns-core-modules/data/observable").Observable;
+const gestures = require("tns-core-modules/ui/gestures");
+const dialogs = require("tns-core-modules/ui/dialogs");
+const Image = require("tns-core-modules/ui/image").Image;
+const Label = require("tns-core-modules/ui/label").Label;
+const ToolTip = require("nativescript-tooltip").ToolTip;
+/* ***********************************************************
+* Use the "onNavigatingTo" handler to initialize the page binding context.
+*************************************************************/
 
-/*
-NativeScript adheres to the CommonJS specification for dealing with
-JavaScript modules. The CommonJS require() function is how you import
-JavaScript modules defined in other files.
-*/
-const createViewModel = require("./main-view-model").createViewModel;
+
+// this is a function, could also be like
+// const planetPath = function planetPath(id) { return '~/images/group/planets/planet' + id + '.png'; }
+const planetPath = (id) => { return `~/images/group/planets/planet${id}.png`; }
+const planetSelect = '~/images/select.png';
+const planetNotSelect = '~/images/nonselect.png';
+
+const planetsCount = 14;
+const planets = [];
+
+let sn = 0;
+let planetImage = null;
+
 
 function onNavigatingTo(args) {
-    /*
-    This gets a reference this page’s <Page> UI component. You can
-    view the API reference of the Page to see what’s available at
-    https://docs.nativescript.org/api-reference/classes/_ui_page_.page.html
-    */
+    console.log('onNavigatingTo');
     const page = args.object;
+    page.bindingContext = new PlanetSelectViewModel();
 
-    /*
-    A page’s bindingContext is an object that should be used to perform
-    data binding between XML markup and JavaScript code. Properties
-    on the bindingContext can be accessed using the {{ }} syntax in XML.
-    In this example, the {{ message }} and {{ onTap }} bindings are resolved
-    against the object returned by createViewModel().
+    planetImage = page.getViewById('planet-image');
 
-    You can learn more about data binding in NativeScript at
-    https://docs.nativescript.org/core-concepts/data-binding.
-    */
-    page.bindingContext = createViewModel();
+    let xmlPlanets = page.getViewById('planets');
+    for (let i = 0; i < planetsCount; i++) {
+        let planet = new Image();
+        if (i === sn) {
+            planetImage.set('src', planetPath(i));
+            planet.src = planetSelect;
+        } else {
+            planet.src = planetNotSelect;
+        }
+        planet.class = 'planets-circles';
+        planets.push(planet);
+        xmlPlanets.addChild(planet);
+    }
+    console.log('planetsLength', planets.length);
 }
 
-/*
-Exporting a function in a NativeScript code-behind file makes it accessible
-to the file’s corresponding XML file. In this case, exporting the onNavigatingTo
-function here makes the navigatingTo="onNavigatingTo" binding in this page’s XML
-file work.
-*/
+function onSelect() {
+    console.log('onSelect');
+    dialogs.confirm({
+        title: "Are you sure?",
+        message: "Do you want this to be your planet?",
+        okButtonText: "Launch",
+        cancelButtonText: "Abort",
+    }).then(function (result) {
+        // result argument is boolean
+        console.log("Dialog result: " + result);
+    });
+}
+
+function onSwipe(args) {
+    console.log('onSwipe');
+    if (args.direction == 2) {
+        sn++;
+    } else {
+        sn--;
+    }
+
+    if (sn >= planets.length) {
+        console.log("exceed");
+        sn = 0;
+    } else if (sn < 0) {
+        sn = planets.length - 1;
+    }
+
+    console.log('sn:', sn);
+    console.log('length:', planets.length);
+
+    for (let i = 0; i < planets.length; i++) {
+        if (i === sn) {
+            planets[i].set('src', planetSelect);
+            planetImage.set('src', planetPath(i));
+        } else {
+            planets[i].set('src', planetNotSelect);
+
+        }
+    }
+
+}
+
+function onHelpTap() {
+    console.log('onHelpTap');
+    let tip = new ToolTip(planetImage, { position: 'bottom', text: "Swipe to switch planets<br/>Tap to select"} );
+    tip.show()
+}
+
+
+
+exports.onSwipe = onSwipe;
+exports.onSelect = onSelect;
 exports.onNavigatingTo = onNavigatingTo;
+exports.onHelpTap = onHelpTap;

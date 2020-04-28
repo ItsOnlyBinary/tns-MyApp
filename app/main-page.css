@@ -1,0 +1,26 @@
+#title {
+    color: white;
+    font-size: 34px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+#planet-container {
+    padding: 80% 0;
+}
+
+#planet-image {
+    width: 60%;
+    height: 60%;
+}
+
+#planets {
+    justify-content: space-around;
+    padding: 20px;
+    margin-bottom: 40px;
+}
+
+.planets-circles {
+    width: 60px;
+    height: 60px;
+}
